@@ -1,0 +1,74 @@
+# The manifest for the "copilot-demo-api" service.
+# Read the full specification for the "Load Balanced Web Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: copilot-demo-api
+type: Load Balanced Web Service
+
+# Distribute traffic to your service.
+http:
+  # Requests to this path will be forwarded to your service.
+  # To match all requests you can use the "/" path.
+  path: '/'
+  # You can specify a custom health check path. The default is "/".
+  healthcheck: 
+    path: '/_healthcheck'
+    port: 80
+    success_codes: '200'
+    healthy_threshold: 3
+    unhealthy_threshold: 2
+    interval: 15s
+    timeout: 10s
+    grace_period: 60s
+  
+
+
+# Configuration for your containers and service.
+image:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/#image-build
+  build: Dockerfile
+  # Port exposed through your container to route traffic to it.
+  port: 80
+
+cpu: 256       # Number of CPU units for the task.
+memory: 512    # Amount of memory in MiB used by the task.
+platform: linux/x86_64  # See https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/#platform
+exec: true     # Enable running commands in your container.
+network:
+  connect: true # Enable Service Connect for intra-environment traffic between services.
+
+# Autoscaling configuration.
+# count:
+#   range: 1-5
+#   cooldown:
+#     in: 60s
+#     out: 30s
+#   cpu_percentage: 70
+#   memory_percentage: 70
+  # requests: 30
+  # response_time: 2s
+
+# storage:
+  # readonly_fs: true       # Limit to read-only access to mounted root filesystems.
+ 
+# Optional fields for more advanced use-cases.
+#
+#variables:                    # Pass environment variables as key value pairs.
+#  LOG_LEVEL: info
+
+#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+#  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
+
+# deployment controller configuration.
+deployment:
+  rolling: 'default' # Configure the deployment. See https://aws.github.io/copilot-cli/docs/include/deployment/#deployment-rolling
+
+# You can override any of the values defined above by environment.
+environments:
+  development:
+    http:
+      alias:
+        - name: copilot-demo-api-dev.dolpin.io
+          hosted_zone: "Z02754561664YON2WHPLJ"
+      count: 1
